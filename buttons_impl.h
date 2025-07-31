@@ -4,7 +4,6 @@
 #include "wifi_manager.h"
 #include "rtc_helper.h"
 
-// Global variables definitions
 int currentMenuItem = 0;
 bool inMenu = false;
 unsigned long lastButtonPress = 0;
@@ -18,10 +17,8 @@ volatile unsigned long lastLeftInterrupt = 0;
 volatile unsigned long lastSelectInterrupt = 0;
 volatile unsigned long lastRightInterrupt = 0;
 
-// Debounce delay for interrupts
-const unsigned long INTERRUPT_DEBOUNCE = 200; // 200ms debounce
+const unsigned long INTERRUPT_DEBOUNCE = 200; 
 
-// Interrupt Service Routines (ISR)
 void IRAM_ATTR leftButtonISR() {
     unsigned long now = millis();
     if (now - lastLeftInterrupt > INTERRUPT_DEBOUNCE) {
@@ -53,8 +50,7 @@ void initButtons() {
     pinMode(BTN_LEFT, INPUT_PULLUP);
     pinMode(BTN_SELECT, INPUT_PULLUP);
     pinMode(BTN_RIGHT, INPUT_PULLUP);
-    
-    // Attach interrupts on FALLING edge (button press with pullup)
+
     attachInterrupt(digitalPinToInterrupt(BTN_LEFT), leftButtonISR, FALLING);
     attachInterrupt(digitalPinToInterrupt(BTN_SELECT), selectButtonISR, FALLING);
     attachInterrupt(digitalPinToInterrupt(BTN_RIGHT), rightButtonISR, FALLING);
@@ -66,11 +62,10 @@ void initButtons() {
 }
 
 void handleButtons() {
-    // Check interrupt flags and handle button presses
     bool buttonHandled = false;
     
     if (leftPressed) {
-        leftPressed = false; // Clear flag
+        leftPressed = false; 
         Serial.println("Processing LEFT button");
         lastButtonPress = millis();
         buttonHandled = true;
@@ -86,7 +81,7 @@ void handleButtons() {
     }
     
     if (selectPressed) {
-        selectPressed = false; // Clear flag
+        selectPressed = false; 
         Serial.println("Processing SELECT button");
         lastButtonPress = millis();
         buttonHandled = true;
@@ -101,7 +96,7 @@ void handleButtons() {
     }
     
     if (rightPressed) {
-        rightPressed = false; // Clear flag
+        rightPressed = false; 
         Serial.println("Processing RIGHT button");
         lastButtonPress = millis();
         buttonHandled = true;
@@ -116,7 +111,6 @@ void handleButtons() {
         }
     }
     
-    // Debug: Show raw button states periodically (only if no button was pressed)
     if (!buttonHandled) {
         static unsigned long lastDebug = 0;
         if (millis() - lastDebug > 5000) {
@@ -127,13 +121,11 @@ void handleButtons() {
         }
     }
     
-    // Menu timeout
     if (inMenu && (millis() - lastButtonPress) > menuTimeout) {
         Serial.println("Menu timeout");
         exitMenu();
     }
     
-    // Menu refresh
     if (inMenu && (millis() - lastMenuUpdate) > 10000) {
         showMenuWithSelection();
         lastMenuUpdate = millis();
@@ -144,7 +136,6 @@ void showMenuWithSelection() {
     String line1 = ">" + menuItems[currentMenuItem];
     String line2 = "(" + String(currentMenuItem + 1) + "/" + String(menuItemCount) + ") L<->R SEL";
     
-    // Truncate line1 if too long
     if (line1.length() > 16) {
         line1 = line1.substring(0, 15) + ">";
     }
@@ -152,7 +143,6 @@ void showMenuWithSelection() {
     lcdPrint(line1, line2);
     lastMenuUpdate = millis();
     
-    // Also show time and greeting in serial
     Serial.println("=== MENU ===");
     Serial.println(getTimeGreeting() + " - " + getCurrentTime());
     Serial.println("Selected: " + menuItems[currentMenuItem]);
@@ -160,22 +150,22 @@ void showMenuWithSelection() {
 }
 
 void executeMenuItem(int item) {
-    inMenu = false; // Exit menu when executing
+    inMenu = false; 
     
     switch(item) {
-        case 0: // Test Finger
+        case 0: 
             lcdPrint("Executing...", "Test Finger");
             delay(1000);
             testFingerDetection();
             break;
             
-        case 1: // Enroll Finger
+        case 1: 
             lcdPrint("Executing...", "Enroll Finger");
             delay(1000);
             simpleEnrollment();
             break;
             
-        case 2: // WiFi Status
+        case 2:
             lcdPrint("Executing...", "WiFi Status");
             delay(1000);
             if (isWiFiConnected()) {
@@ -187,10 +177,10 @@ void executeMenuItem(int item) {
                 Serial.println("WiFi Status: Disconnected or in config mode");
             }
             delay(3000);
-            enterMenu(); // Return to menu
+            enterMenu(); 
             break;
             
-        case 3: // Reset WiFi
+        case 3: 
             lcdPrint("Executing...", "Reset WiFi");
             delay(1000);
             lcdPrint("Resetting WiFi", "Please wait...");
@@ -198,13 +188,13 @@ void executeMenuItem(int item) {
             resetWiFiSettings();
             break;
             
-        case 4: // Disconnect WiFi
+        case 4: 
             lcdPrint("Executing...", "Disconnect WiFi");
             delay(1000);
             lcdPrint("Disconnecting", "WiFi...");
             disconnectWiFi();
             delay(2000);
-            enterMenu(); // Return to menu
+            enterMenu(); 
             break;
             
         case 5: // Set RTC Time
@@ -214,20 +204,20 @@ void executeMenuItem(int item) {
             rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
             lcdPrint("RTC Time Set", "To compile time");
             delay(2000);
-            enterMenu(); // Return to menu
+            enterMenu(); 
             break;
             
         default:
             lcdPrint("Error", "Invalid selection");
             delay(2000);
-            enterMenu(); // Return to menu
+            enterMenu(); 
             break;
     }
 }
 
 void enterMenu() {
     inMenu = true;
-    currentMenuItem = 0; // Reset to first menu item
+    currentMenuItem = 0; 
     lastButtonPress = millis();
     lastMenuUpdate = millis();
     showMenuWithSelection();
